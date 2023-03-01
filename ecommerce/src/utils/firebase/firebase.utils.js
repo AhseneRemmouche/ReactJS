@@ -1,4 +1,3 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
 import {
     getAuth,
@@ -7,11 +6,11 @@ import {
     GoogleAuthProvider,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
 } from 'firebase/auth';
-
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
     apiKey: 'AIzaSyAXfmeyc1N1J02PCXL-wkNW_UfqXoIvxws',
     authDomain: 'ecommerce-db-2bfe6.firebaseapp.com',
@@ -21,12 +20,13 @@ const firebaseConfig = {
     appId: '1:573967970233:web:20067e62cd0723897e1068',
 };
 
-// Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 
 const googleProvider = new GoogleAuthProvider();
 
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+googleProvider.setCustomParameters({
+    prompt: 'select_account',
+});
 
 export const auth = getAuth();
 export const signInWithGooglePopup = () =>
@@ -40,8 +40,10 @@ export const createUserDocumentFromAuth = async (
     userAuth,
     additionalInformation = {}
 ) => {
+    if (!userAuth) return;
+
     const userDocRef = doc(db, 'users', userAuth.uid);
-    console.log(userDocRef);
+
     const userSnapshot = await getDoc(userDocRef);
 
     if (!userSnapshot.exists()) {
@@ -56,17 +58,26 @@ export const createUserDocumentFromAuth = async (
                 ...additionalInformation,
             });
         } catch (error) {
-            console.log('error creating the user', error.message);
+            alert('error creating the user', error.message);
         }
     }
+
+    return userDocRef;
 };
 
 export const createAuthUserWithEmailAndPassword = async (email, password) => {
     if (!email || !password) return;
+
     return await createUserWithEmailAndPassword(auth, email, password);
 };
 
 export const signInAuthUserWithEmailAndPassword = async (email, password) => {
     if (!email || !password) return;
+
     return await signInWithEmailAndPassword(auth, email, password);
 };
+
+export const signOutUser = async () => await signOut(auth);
+
+export const onAuthStateChangedListner = (callback) =>
+    onAuthStateChanged(auth, callback);
